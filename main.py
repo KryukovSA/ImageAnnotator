@@ -1,18 +1,31 @@
 import sys
 
 from PyQt5 import QtGui
-from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QApplication, QMainWindow, QAction, QLabel, QGraphicsView, QGraphicsScene, \
-    QGraphicsPixmapItem, QVBoxLayout, QWidget, QFileDialog, QGraphicsEllipseItem, QTableWidget, \
-    QTableWidgetItem
+from PyQt5.QtWidgets import (
+    QAction,
+    QApplication,
+    QFileDialog,
+    QGraphicsEllipseItem,
+    QGraphicsPixmapItem,
+    QGraphicsScene,
+    QGraphicsView,
+    QLabel,
+    QMainWindow,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
+
+from constants import *
 
 
 class ImageAnnotator(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Image Annotator")
-        self.setGeometry(100, 100, 2500, 1600)
+        self.setWindowTitle(WINDOW_TITLE)
+        self.setGeometry(100, 100, WINDOW_WIDTH, WINDOW_HEIGHT)
 
         self.initUI()
 
@@ -26,7 +39,7 @@ class ImageAnnotator(QMainWindow):
         container.setLayout(layout)
         self.setCentralWidget(container)
 
-        open_action = QAction("Open Image", self)
+        open_action = QAction(OPEN_IMAGE_ACTION_TEXT, self)
         open_action.triggered.connect(self.openImage)
         zoom_in_action = QAction("Zoom In", self)
         zoom_in_action.triggered.connect(self.zoomIn)
@@ -51,8 +64,13 @@ class ImageAnnotator(QMainWindow):
     def openImage(self):
         options = QFileDialog.Options()
         options |= QFileDialog.ReadOnly
-        file_name, _ = QFileDialog.getOpenFileName(self, "Open Image", "", "Images (*.png *.jpg *.bmp);;All Files (*)",
-                                                   options=options)
+        file_name, _ = QFileDialog.getOpenFileName(
+            self,
+            OPEN_IMAGE_ACTION_TEXT,
+            "",
+            IMAGE_FILTER,
+            options=options,
+        )
         if file_name:
             self.scene.clear()
             pixmap = QPixmap(file_name)
@@ -62,17 +80,19 @@ class ImageAnnotator(QMainWindow):
             self.graphics_view.setScene(self.scene)
 
     def zoomIn(self):
-        self.zoom(1.2)
+        self.zoom(ZOOM_FACTOR)
 
     def zoomOut(self):
-        self.zoom(1 / 1.2)
+        self.zoom(1 / ZOOM_FACTOR)
 
     def zoom(self, factor):
         self.zoom_factor *= factor
-        self.graphics_view.setTransform(QtGui.QTransform().scale(self.zoom_factor, self.zoom_factor))
+        self.graphics_view.setTransform(
+            QtGui.QTransform().scale(self.zoom_factor, self.zoom_factor)
+        )
 
     def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton and self.original_pixmap:
+        if event.button() == LEFT_BUTTON and self.original_pixmap:
             view_pos = event.pos()
             scene_pos = self.graphics_view.mapToScene(view_pos)
             self.addPoint(scene_pos)
@@ -80,9 +100,13 @@ class ImageAnnotator(QMainWindow):
     def addPoint(self, pos):
         x = round(pos.x(), 1)
         y = round(pos.y(), 1)
-        marker_size = 4 / self.zoom_factor
-        point_item = QGraphicsEllipseItem(pos.x() - marker_size / 2, pos.y() - marker_size / 2, marker_size,
-                                          marker_size)
+        marker_size = MARKER_SIZE / self.zoom_factor
+        point_item = QGraphicsEllipseItem(
+            pos.x() - marker_size / 2,
+            pos.y() - marker_size / 2,
+            marker_size,
+            marker_size,
+        )
         point_item.setPen(Qt.red)
         self.scene.addItem(point_item)
 
